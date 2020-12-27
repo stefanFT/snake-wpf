@@ -1,9 +1,9 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Input;
 
 namespace Snake
 {
@@ -13,6 +13,7 @@ namespace Snake
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         public readonly Canvas _head;
+        private readonly SnakeModel _snake;
 
         public MainWindow()
         {
@@ -22,13 +23,18 @@ namespace Snake
             _head = new Canvas();
             Canvas.SetLeft(_head, 0);
             Canvas.SetTop(_head, 0);
-            _head.Background = Brushes.SkyBlue;
-            _head.Height = 100;
-            _head.Width = 100;
+            _head.Background = Brushes.Black;
+            _head.Height = 30;
+            _head.Width = 30;
             //Canvas.SetLeft(head, 200);
             //Canvas.SetTop(head, 500);
 
-            var fps = 60d;
+            //var d = new GeometryDrawing();
+            //d.Geometry.Transform = new TranslateTransform(offset x, offset y);
+            
+            _snake = new SnakeModel();
+
+            var fps = 30d;
             var mainTimer = new Timer((1 / fps) * 1000);
             mainTimer.Elapsed += MainTimer_Elapsed;
             mainTimer.Start();
@@ -37,22 +43,42 @@ namespace Snake
 
             //Board.Children.Add(testButton);
             Board.Children.Add(_head);
+
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void Draw()
+        {
+            Canvas.SetLeft(this._head, this._snake.Head.X);
+            Canvas.SetTop(this._head, this._snake.Head.Y);
         }
 
         private void MainTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            UpdateHeadPosition();
-        }
+            this._snake.UpdatePosition();
 
-        public void UpdateHeadPosition()
-        {
-            Application.Current.Dispatcher.Invoke(() =>
+            if (Application.Current is Application application)
             {
-                var left = Canvas.GetLeft(this._head);
-                Canvas.SetLeft(this._head, left + 1);
-            });
+                application.Dispatcher.Invoke(() => this.Draw());
+            }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            Direction? direction = e.Key switch
+            {
+                Key.Up => Direction.Up,
+                Key.Right => Direction.Right,
+                Key.Down => Direction.Down,
+                Key.Left => Direction.Left,
+                _ => null,
+            };
+
+            if (direction.HasValue)
+            {
+                this._snake.SetDirection(direction.Value);
+            }
+        }
     }
 }
