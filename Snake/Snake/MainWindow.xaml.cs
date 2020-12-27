@@ -1,12 +1,11 @@
 ﻿using System.ComponentModel;
-using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Input;
 using System.Windows.Threading;
 using System;
-using System.Windows.Shapes;
+using System.Collections.Generic;
 
 namespace Snake
 {
@@ -14,18 +13,12 @@ namespace Snake
     {
         public readonly Canvas _head;
         private readonly SnakeModel _snake;
+        private readonly List<Canvas> _canvasCollection = new List<Canvas>();
 
         public MainWindow()
         {
             InitializeComponent();
             this.DataContext = this;
-
-            _head = new Canvas();
-            Canvas.SetLeft(_head, 0);
-            Canvas.SetTop(_head, 0);
-            _head.Background = Brushes.Black;
-            _head.Height = 30;
-            _head.Width = 30;
 
             _snake = new SnakeModel();
 
@@ -34,8 +27,6 @@ namespace Snake
             timer.Interval = TimeSpan.FromSeconds(1 / fps);
             timer.Start();
             timer.Tick += MainEvent_Handler;
-
-            Board.Children.Add(_head);
         }
 
         private void MainEvent_Handler(object sender, EventArgs e)
@@ -49,19 +40,28 @@ namespace Snake
 
         private void Draw()
         {
-            Canvas.SetLeft(this._head, this._snake.Head.X);
-            Canvas.SetTop(this._head, this._snake.Head.Y);
-
-            for (int i = 0; i < this._snake.Tail.Count; i++)
+            // Clean up
+            foreach (var canvas in this._canvasCollection)
             {
-                var piece = this._snake.Tail[i];
-                var rect = new Rectangle();
-                rect.Width = 20;
-                rect.Height = 20;
-                rect.Fill = Brushes.Green;
+                Board.Children.Remove(canvas);
+            }
 
-                Board.Children.Add(rect);
-            } 
+            this._canvasCollection.Clear();
+
+            foreach (var piece in this._snake.Pieces)
+            {
+                var canvas = new Canvas();
+                canvas.Height = 20;
+                canvas.Width = 20;
+                canvas.Background = Brushes.Green;
+
+                Canvas.SetLeft(canvas, piece.X);
+                Canvas.SetTop(canvas, piece.Y);
+
+                this._canvasCollection.Add(canvas);
+
+                Board.Children.Add(canvas);
+            }
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)

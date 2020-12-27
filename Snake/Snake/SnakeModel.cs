@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Snake
 {
@@ -25,6 +26,10 @@ namespace Snake
             var blockSize = 20;
 
             this._tail.Add(new SnakePiece(blockSize, 0, blockSize));
+            this._tail.Add(new SnakePiece(blockSize, 0, blockSize*2));
+            this._tail.Add(new SnakePiece(blockSize, 0, blockSize*3));
+            this._tail.Add(new SnakePiece(blockSize, 0, blockSize*4));
+            this._tail.Add(new SnakePiece(blockSize, 0, blockSize*5));
         }
 
         public void SetDirection(Direction newDirection)
@@ -43,11 +48,15 @@ namespace Snake
             }
         }
 
-        public SnakePiece Head => this._head;
-
-        public List<SnakePiece> Tail => this._tail;
+        public IEnumerable<SnakePiece> Pieces => new List<SnakePiece> { this._head }.Concat(this._tail); 
 
         public void UpdatePosition()
+        {
+            this.UpdateTail();
+            this.UpdateHead();
+        }
+
+        private void UpdateHead()
         {
             var delta = this._stopwatch.ElapsedMilliseconds;
             this._stopwatch.Restart();
@@ -69,7 +78,7 @@ namespace Snake
                     break;
 
                 case Direction.Left:
-                    this._head.X -= displacement; 
+                    this._head.X -= displacement;
                     break;
 
                 default:
@@ -77,12 +86,26 @@ namespace Snake
             }
         }
 
+        private void UpdateTail()
+        {
+            for (int i = this._tail.Count - 1; i > 0; i--)
+            {
+                var piece = this._tail[i];
+                var next = this._tail[i - 1];
+                piece.X = next.X;
+                piece.Y = next.Y;
+            }
+
+            if (_tail.Any())
+            {
+                this._tail[0].X = this._head.X;
+                this._tail[0].Y = this._head.Y;
+            }
+        }
+
         public class SnakePiece
         {
-            public SnakePiece(
-                int length,
-                int x,
-                int y)
+            public SnakePiece(int length, int x, int y)
             {
                 this.Length = length;
                 this.X = x;
