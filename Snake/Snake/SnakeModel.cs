@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 
 namespace Snake
 {
@@ -15,18 +14,38 @@ namespace Snake
 
     public class SnakeModel
     {
-        private readonly Block _head = new Block();
-        private readonly List<Block> _tail = new List<Block>();
-        private readonly double _speed = 0.12;
+        private readonly SnakePiece _head = new SnakePiece(20, 0, 0);
+        private readonly List<SnakePiece> _tail = new List<SnakePiece>();
+        private readonly double _speed = 0.125;
         private readonly Stopwatch _stopwatch = new Stopwatch();
         private Direction _direction = Direction.Down;
 
-        public void SetDirection(Direction newDirection)
+        public SnakeModel()
         {
-            this._direction = newDirection;
+            var blockSize = 20;
+
+            this._tail.Add(new SnakePiece(blockSize, 0, blockSize));
         }
 
-        public Block Head => this._head;
+        public void SetDirection(Direction newDirection)
+        {
+            var oppositeDirection = newDirection switch
+            {
+                Direction.Up => Direction.Down,
+                Direction.Down => Direction.Up,
+                Direction.Left => Direction.Right,
+                Direction.Right => Direction.Left,
+            };
+
+            if (_direction != oppositeDirection)
+            {
+                this._direction = newDirection;
+            }
+        }
+
+        public SnakePiece Head => this._head;
+
+        public List<SnakePiece> Tail => this._tail;
 
         public void UpdatePosition()
         {
@@ -58,8 +77,20 @@ namespace Snake
             }
         }
 
-        public class Block
+        public class SnakePiece
         {
+            public SnakePiece(
+                int length,
+                int x,
+                int y)
+            {
+                this.Length = length;
+                this.X = x;
+                this.Y = y;
+            }
+
+            public int Length { get; }
+
             public int X { get; set; }
 
             public int Y { get; set; }

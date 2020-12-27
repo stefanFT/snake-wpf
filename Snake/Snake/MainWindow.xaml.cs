@@ -4,12 +4,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Input;
+using System.Windows.Threading;
+using System;
+using System.Windows.Shapes;
 
 namespace Snake
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         public readonly Canvas _head;
@@ -26,42 +26,42 @@ namespace Snake
             _head.Background = Brushes.Black;
             _head.Height = 30;
             _head.Width = 30;
-            //Canvas.SetLeft(head, 200);
-            //Canvas.SetTop(head, 500);
 
-            //var d = new GeometryDrawing();
-            //d.Geometry.Transform = new TranslateTransform(offset x, offset y);
-            
             _snake = new SnakeModel();
 
             var fps = 30d;
-            var mainTimer = new Timer((1 / fps) * 1000);
-            mainTimer.Elapsed += MainTimer_Elapsed;
-            mainTimer.Start();
+            var timer = new DispatcherTimer(DispatcherPriority.Render, Application.Current.Dispatcher);
+            timer.Interval = TimeSpan.FromSeconds(1 / fps);
+            timer.Start();
+            timer.Tick += MainEvent_Handler;
 
-            //head = new Point(300, 300);
-
-            //Board.Children.Add(testButton);
             Board.Children.Add(_head);
+        }
 
+        private void MainEvent_Handler(object sender, EventArgs e)
+        {
+            this._snake.UpdatePosition();
+            Draw();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
 
         private void Draw()
         {
             Canvas.SetLeft(this._head, this._snake.Head.X);
             Canvas.SetTop(this._head, this._snake.Head.Y);
-        }
 
-        private void MainTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            this._snake.UpdatePosition();
-
-            if (Application.Current is Application application)
+            for (int i = 0; i < this._snake.Tail.Count; i++)
             {
-                application.Dispatcher.Invoke(() => this.Draw());
-            }
+                var piece = this._snake.Tail[i];
+                var rect = new Rectangle();
+                rect.Width = 20;
+                rect.Height = 20;
+                rect.Fill = Brushes.Green;
+
+                Board.Children.Add(rect);
+            } 
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
