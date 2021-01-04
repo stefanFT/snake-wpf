@@ -1,16 +1,18 @@
 ﻿
-using System.Diagnostics;
 
 namespace Snake.GameElements
 {
     public class Piece
     {
-        public Piece(int x, int y, int size)
+        public Piece(int x, int y, int size, Direction direction = Direction.Down)
         {
             X = x;
             Y = y;
             Size = size;
+            Direction = direction;
         }
+
+        public Direction Direction { get; set; }
 
         public int X { get; set; }
 
@@ -20,15 +22,7 @@ namespace Snake.GameElements
 
         public int HalfSize => Size / 2;
 
-        public int Left => LeftInternal();
-
-        private int LeftInternal()
-        {
-            var x = X;
-            var halfSize = HalfSize;
-            Trace.WriteLine($"X: {x}, halfSize: {halfSize}, Size: {Size}");
-            return X - HalfSize;
-        }
+        public int Left => X - HalfSize;
 
         public int Right => X + HalfSize;
 

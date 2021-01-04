@@ -20,36 +20,43 @@ namespace Snake
         private readonly int _height;
         private readonly Random _random = new Random();
 
+        private readonly int _snakePieceSize = 20;
         private readonly Piece _head;
         private readonly List<Piece> _tail = new List<Piece>();
         private readonly double _speed = 0.125;
         private readonly Stopwatch _stopwatch = new Stopwatch();
         private bool _isPaused = true;
-        private Direction _direction = Direction.Down;
 
         public SnakeGame(int width, int height)
         {
             _width = width;
             _height = height;
 
-            var blockSize = 20;
-
-            _head = new Piece(x: 0, y: 0, blockSize);
-
-            for (int i = 1; i < 10; i++) 
-            {
-                _tail.Add(new Piece(x: blockSize, y: blockSize * i, size: blockSize));
-            }
-
-            this.Apple = new Piece(300, 300, blockSize * 2);
+            
+            _head = new Piece(x: 0, y: 0, _snakePieceSize);
+            this.Apple = new Piece(300, 300, _snakePieceSize * 2);
         }
+
+        public Piece Apple { get; }
+
+        public int NumberOfHits { get; private set; }
+
+        public IEnumerable<Piece> Pieces => new List<Piece> { _head }.Concat(_tail);
 
         public void Start()
         {
             _isPaused = false;
         }
 
-        public Piece Apple { get; }
+        public void TogglePause()
+        {
+            _isPaused = !_isPaused;
+
+            if (!_isPaused)
+            {
+                _stopwatch.Restart();
+            }
+        }
 
         public void SetDirection(Direction newDirection)
         {
@@ -62,15 +69,11 @@ namespace Snake
                 _ => throw new NotSupportedException(),
             };
 
-            if (_direction != oppositeDirection)
+            if (_head.Direction != oppositeDirection)
             {
-                _direction = newDirection;
+                _head.Direction = newDirection;
             }
         }
-
-        public int NumberOfHits { get; private set; }
-
-        public IEnumerable<Piece> Pieces => new List<Piece> { _head }.Concat(_tail);
 
         public void UpdatePosition()
         {
@@ -86,23 +89,44 @@ namespace Snake
             {
                 NumberOfHits++;
                 MoveAppleToRandomPosition();
-            }
-        }
-
-        public void TogglePause()
-        {
-            _isPaused = !_isPaused;
-
-            if (!_isPaused)
-            {
-                _stopwatch.Restart();
+                AddPiece();
             }
         }
 
         private void MoveAppleToRandomPosition()
         {
-            Apple.X = _random.Next(0, _width + 1); ;
-            Apple.Y = _random.Next(0, _height + 1); ;
+            Apple.X = _random.Next(0 + Apple.HalfSize, _width - Apple.HalfSize + 1);
+            Apple.Y = _random.Next(0 + Apple.HalfSize, _height - Apple.HalfSize + 1);
+        }
+
+        private void AddPiece()
+        {
+            var currentLast = _tail.Any() ? _tail.Last() : _head;
+            var newLast = new Piece(currentLast.X, currentLast.Y, _snakePieceSize);
+
+            switch (currentLast.Direction)
+            {
+                case Direction.Up:
+                    newLast.Y += _snakePieceSize;
+                    break;
+
+                case Direction.Down:
+                    newLast.Y -= _snakePieceSize;
+                    break;
+
+                case Direction.Right:
+                    newLast.X += _snakePieceSize;
+                    break;
+
+                case Direction.Left:
+                    newLast.X -= _snakePieceSize;
+                    break;
+
+                default:
+                    throw new NotSupportedException($"Direction: {currentLast} is not supported!");
+            }
+
+            _tail.Add(newLast);
         }
 
         private void UpdateHead()
@@ -112,18 +136,18 @@ namespace Snake
 
             var displacement = (int)(_speed * delta);
 
-            switch (_direction)
+            switch (_head.Direction)
             {
                 case Direction.Up:
                     _head.Y -= displacement;
                     break;
 
-                case Direction.Right:
-                    _head.X += displacement;
-                    break;
-
                 case Direction.Down:
                     _head.Y += displacement;
+                    break;
+
+                case Direction.Right:
+                    _head.X += displacement;
                     break;
 
                 case Direction.Left:
@@ -131,7 +155,7 @@ namespace Snake
                     break;
 
                 default:
-                    throw new NotSupportedException($"The direction: {_direction} is not supported.");
+                    throw new NotSupportedException($"The direction: {_head.Direction} is not supported.");
             }
         }
 
@@ -143,6 +167,7 @@ namespace Snake
                 var next = _tail[i - 1];
                 piece.X = next.X;
                 piece.Y = next.Y;
+                piece.Direction = next.Direction;
             }
 
             if (_tail.Any())

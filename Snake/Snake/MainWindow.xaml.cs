@@ -5,6 +5,7 @@ using System.Windows.Media;
 using System.Windows.Input;
 using System.Windows.Threading;
 using System;
+using System.Threading;
 
 namespace Snake
 {
@@ -13,6 +14,7 @@ namespace Snake
         private Canvas _appleModel;
         private Canvas _snakeModel;
         private readonly SnakeGame _snakeGame;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
         public MainWindow()
         {
@@ -33,21 +35,22 @@ namespace Snake
             ContentRendered += MainWindow_ContentRendered;
         }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public int Points => _snakeGame.NumberOfHits;
+
         private void MainWindow_ContentRendered(object sender, EventArgs e)
         {
             _snakeGame.Start();   
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public int Points => _snakeGame.NumberOfHits;
-
-        private void MainEvent_Handler(object sender, EventArgs e)
+        private async void MainEvent_Handler(object sender, EventArgs e)
         {
-
+            await _semaphore.WaitAsync();
             this._snakeGame.UpdatePosition();
             DrawSnake();
             DrawApple();
+            _semaphore.Release();
         }
 
         private void DrawSnake()
