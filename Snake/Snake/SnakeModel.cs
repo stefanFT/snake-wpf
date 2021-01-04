@@ -18,9 +18,9 @@ namespace Snake
     {
         private readonly int _width;
         private readonly int _height;
-        private readonly Random _random;
+        private readonly Random _random = new Random();
 
-        private readonly Piece _head = new Piece(20, 0, 0);
+        private readonly Piece _head;
         private readonly List<Piece> _tail = new List<Piece>();
         private readonly double _speed = 0.125;
         private readonly Stopwatch _stopwatch = new Stopwatch();
@@ -31,15 +31,17 @@ namespace Snake
         {
             _width = width;
             _height = height;
-            _random = new Random();
 
             var blockSize = 20;
+
+            _head = new Piece(x: 0, y: 0, blockSize);
+
             for (int i = 1; i < 10; i++) 
             {
-                _tail.Add(new Piece(blockSize, 0, blockSize * i));
+                _tail.Add(new Piece(x: blockSize, y: blockSize * i, size: blockSize));
             }
 
-            this.Apple = new Piece(300, 300, blockSize * 4);
+            this.Apple = new Piece(300, 300, blockSize * 2);
         }
 
         public Piece Apple { get; }
@@ -78,7 +80,7 @@ namespace Snake
             if (_head.IsColliding(Apple))
             {
                 NumberOfHits++;
-                MoveApple();
+                MoveAppleToRandomPosition();
             }
         }
 
@@ -92,13 +94,10 @@ namespace Snake
             }
         }
 
-        private void MoveApple()
+        private void MoveAppleToRandomPosition()
         {
-            var x = _random.Next(0, _width + 1);
-            var y = _random.Next(0, _height + 1);
-
-            Apple.X = x;
-            Apple.Y = y;
+            Apple.X = _random.Next(0, _width + 1); ;
+            Apple.Y = _random.Next(0, _height + 1); ;
         }
 
         private void UpdateHead()

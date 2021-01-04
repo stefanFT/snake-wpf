@@ -5,16 +5,14 @@ using System.Windows.Media;
 using System.Windows.Input;
 using System.Windows.Threading;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Snake
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        private Canvas _apple;
-        private readonly SnakeModel _snake;
-        private readonly List<Canvas> _canvasCollection = new List<Canvas>();
+        private Canvas _appleModel;
+        private Canvas _snakeModel;
+        private readonly SnakeGame _snakeGame;
 
         public MainWindow()
         {
@@ -24,7 +22,7 @@ namespace Snake
             var boardHeight = 600;
             var boardWidth = 600;
 
-            _snake = new SnakeModel(width: boardWidth, height: boardHeight);
+            _snakeGame = new SnakeGame(width: boardWidth, height: boardHeight);
 
             var fps = 30d;
             var timer = new DispatcherTimer(DispatcherPriority.Render, Application.Current.Dispatcher);
@@ -33,56 +31,51 @@ namespace Snake
             timer.Tick += MainEvent_Handler;
         }
 
-        public string GameInfo { get; }
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public int Points => _snakeGame.NumberOfHits;
 
         private void MainEvent_Handler(object sender, EventArgs e)
         {
-            this._snake.UpdatePosition();
-            Draw();
+            this._snakeGame.UpdatePosition();
+            DrawSnake();
             DrawApple();
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void Draw()
+        private void DrawSnake()
         {
-            // Clean up
-            foreach (var canvas in this._canvasCollection)
-            {
-                Board.Children.Remove(canvas);
-            }
+            Board.Children.Remove(_snakeModel);
+            _snakeModel = new Canvas();
 
-            this._canvasCollection.Clear();
-
-            foreach (var piece in this._snake.Pieces)
+            foreach (var piece in this._snakeGame.Pieces)
             {
                 var canvas = new Canvas();
                 canvas.Height = 20;
                 canvas.Width = 20;
                 canvas.Background = Brushes.Green;
 
-                Canvas.SetLeft(canvas, piece.X);
-                Canvas.SetTop(canvas, piece.Y);
+                Canvas.SetLeft(canvas, piece.Left);
+                Canvas.SetTop(canvas, piece.Top);
 
-                this._canvasCollection.Add(canvas);
-
-                Board.Children.Add(canvas);
+                _snakeModel.Children.Add(canvas);
             }
+            
+            Board.Children.Add(_snakeModel);
         }
 
         private void DrawApple()
         {
-            Board.Children.Remove(_apple);
+            Board.Children.Remove(_appleModel);
 
-            _apple = new Canvas();
-            _apple.Background = Brushes.Red;
-            _apple.Width = _snake.Apple.Size;
-            _apple.Height = _snake.Apple.Size;
+            _appleModel = new Canvas();
+            _appleModel.Background = Brushes.Red;
+            _appleModel.Width = _snakeGame.Apple.Size;
+            _appleModel.Height = _snakeGame.Apple.Size;
 
-            Canvas.SetLeft(_apple, _snake.Apple.X);
-            Canvas.SetTop(_apple, _snake.Apple.Y);
+            Canvas.SetLeft(_appleModel, _snakeGame.Apple.Left);
+            Canvas.SetTop(_appleModel, _snakeGame.Apple.Top);
 
-            Board.Children.Add(_apple);
+            Board.Children.Add(_appleModel);
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
@@ -98,12 +91,12 @@ namespace Snake
 
             if (direction.HasValue)
             {
-                this._snake.SetDirection(direction.Value);
+                this._snakeGame.SetDirection(direction.Value);
             }
 
             if (e.Key == Key.P)
             {
-                this._snake.TogglePause();
+                this._snakeGame.TogglePause();
             }
         }
     }
