@@ -14,7 +14,7 @@ namespace Snake
         Left,
     }
 
-    public class SnakeModel
+    public class SnakeGame
     {
         private readonly int _width;
         private readonly int _height;
@@ -24,10 +24,10 @@ namespace Snake
         private readonly List<Piece> _tail = new List<Piece>();
         private readonly double _speed = 0.125;
         private readonly Stopwatch _stopwatch = new Stopwatch();
-        private bool _isPaused;
+        private bool _isPaused = true;
         private Direction _direction = Direction.Down;
 
-        public SnakeModel(int width, int height)
+        public SnakeGame(int width, int height)
         {
             _width = width;
             _height = height;
@@ -42,6 +42,11 @@ namespace Snake
             }
 
             this.Apple = new Piece(300, 300, blockSize * 2);
+        }
+
+        public void Start()
+        {
+            _isPaused = false;
         }
 
         public Piece Apple { get; }

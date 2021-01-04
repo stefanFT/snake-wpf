@@ -29,6 +29,13 @@ namespace Snake
             timer.Interval = TimeSpan.FromSeconds(1 / fps);
             timer.Start();
             timer.Tick += MainEvent_Handler;
+
+            ContentRendered += MainWindow_ContentRendered;
+        }
+
+        private void MainWindow_ContentRendered(object sender, EventArgs e)
+        {
+            _snakeGame.Start();   
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -37,6 +44,7 @@ namespace Snake
 
         private void MainEvent_Handler(object sender, EventArgs e)
         {
+
             this._snakeGame.UpdatePosition();
             DrawSnake();
             DrawApple();
