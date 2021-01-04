@@ -24,12 +24,10 @@ namespace Snake
         public SnakeModel()
         {
             var blockSize = 20;
-
-            this._tail.Add(new SnakePiece(blockSize, 0, blockSize));
-            this._tail.Add(new SnakePiece(blockSize, 0, blockSize*2));
-            this._tail.Add(new SnakePiece(blockSize, 0, blockSize*3));
-            this._tail.Add(new SnakePiece(blockSize, 0, blockSize*4));
-            this._tail.Add(new SnakePiece(blockSize, 0, blockSize*5));
+            for (int i = 1; i < 10; i++) 
+            {
+                this._tail.Add(new SnakePiece(blockSize, 0, blockSize * i));
+            }
         }
 
         public void SetDirection(Direction newDirection)

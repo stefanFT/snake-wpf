@@ -22,7 +22,7 @@ namespace Snake
 
             _snake = new SnakeModel();
 
-            var fps = 30d;
+            var fps = 10d;
             var timer = new DispatcherTimer(DispatcherPriority.Render, Application.Current.Dispatcher);
             timer.Interval = TimeSpan.FromSeconds(1 / fps);
             timer.Start();
