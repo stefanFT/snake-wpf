@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Snake.GameElements;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -15,20 +16,33 @@ namespace Snake
 
     public class SnakeModel
     {
-        private readonly SnakePiece _head = new SnakePiece(20, 0, 0);
-        private readonly List<SnakePiece> _tail = new List<SnakePiece>();
+        private readonly int _width;
+        private readonly int _height;
+        private readonly Random _random;
+
+        private readonly Piece _head = new Piece(20, 0, 0);
+        private readonly List<Piece> _tail = new List<Piece>();
         private readonly double _speed = 0.125;
         private readonly Stopwatch _stopwatch = new Stopwatch();
+        private bool _isPaused;
         private Direction _direction = Direction.Down;
 
-        public SnakeModel()
+        public SnakeModel(int width, int height)
         {
+            _width = width;
+            _height = height;
+            _random = new Random();
+
             var blockSize = 20;
             for (int i = 1; i < 10; i++) 
             {
-                this._tail.Add(new SnakePiece(blockSize, 0, blockSize * i));
+                _tail.Add(new Piece(blockSize, 0, blockSize * i));
             }
+
+            this.Apple = new Piece(300, 300, blockSize * 4);
         }
+
+        public Piece Apple { get; }
 
         public void SetDirection(Direction newDirection)
         {
@@ -38,83 +52,100 @@ namespace Snake
                 Direction.Down => Direction.Up,
                 Direction.Left => Direction.Right,
                 Direction.Right => Direction.Left,
+                _ => throw new NotSupportedException(),
             };
 
             if (_direction != oppositeDirection)
             {
-                this._direction = newDirection;
+                _direction = newDirection;
             }
         }
 
-        public IEnumerable<SnakePiece> Pieces => new List<SnakePiece> { this._head }.Concat(this._tail); 
+        public int NumberOfHits { get; private set; }
+
+        public IEnumerable<Piece> Pieces => new List<Piece> { _head }.Concat(_tail);
 
         public void UpdatePosition()
         {
-            this.UpdateTail();
-            this.UpdateHead();
+            if (_isPaused)
+            {
+                return;
+            }
+
+            UpdateTail();
+            UpdateHead();
+
+            if (_head.IsColliding(Apple))
+            {
+                NumberOfHits++;
+                MoveApple();
+            }
+        }
+
+        public void TogglePause()
+        {
+            _isPaused = !_isPaused;
+
+            if (!_isPaused)
+            {
+                _stopwatch.Restart();
+            }
+        }
+
+        private void MoveApple()
+        {
+            var x = _random.Next(0, _width + 1);
+            var y = _random.Next(0, _height + 1);
+
+            Apple.X = x;
+            Apple.Y = y;
         }
 
         private void UpdateHead()
         {
-            var delta = this._stopwatch.ElapsedMilliseconds;
-            this._stopwatch.Restart();
+            var delta = _stopwatch.ElapsedMilliseconds;
+            _stopwatch.Restart();
 
-            var displacement = (int)(this._speed * delta);
+            var displacement = (int)(_speed * delta);
 
             switch (_direction)
             {
                 case Direction.Up:
-                    this._head.Y -= displacement;
+                    _head.Y -= displacement;
                     break;
 
                 case Direction.Right:
-                    this._head.X += displacement;
+                    _head.X += displacement;
                     break;
 
                 case Direction.Down:
-                    this._head.Y += displacement;
+                    _head.Y += displacement;
                     break;
 
                 case Direction.Left:
-                    this._head.X -= displacement;
+                    _head.X -= displacement;
                     break;
 
                 default:
-                    throw new NotSupportedException($"The direction: {this._direction} is not supported.");
+                    throw new NotSupportedException($"The direction: {_direction} is not supported.");
             }
         }
 
         private void UpdateTail()
         {
-            for (int i = this._tail.Count - 1; i > 0; i--)
+            for (int i = _tail.Count - 1; i > 0; i--)
             {
-                var piece = this._tail[i];
-                var next = this._tail[i - 1];
+                var piece = _tail[i];
+                var next = _tail[i - 1];
                 piece.X = next.X;
                 piece.Y = next.Y;
             }
 
             if (_tail.Any())
             {
-                this._tail[0].X = this._head.X;
-                this._tail[0].Y = this._head.Y;
+                _tail[0].X = _head.X;
+                _tail[0].Y = _head.Y;
             }
-        }
-
-        public class SnakePiece
-        {
-            public SnakePiece(int length, int x, int y)
-            {
-                this.Length = length;
-                this.X = x;
-                this.Y = y;
-            }
-
-            public int Length { get; }
-
-            public int X { get; set; }
-
-            public int Y { get; set; }
         }
     }
 }

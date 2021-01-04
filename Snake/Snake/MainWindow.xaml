@@ -8,8 +8,6 @@
         Title="Snake" Height="600" Width="600"
         KeyDown="Window_KeyDown">
     <Canvas
-        Height="600"
-        Width="600"
         x:Name="Board">
     </Canvas>
 </Window>
